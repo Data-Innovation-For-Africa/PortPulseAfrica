@@ -469,45 +469,15 @@ st.markdown("""
 #  DATA SOURCE RESOLUTION
 #  Priority: 1) uploaded file  2) bundled africa_ports_data.csv  3) error
 # ─────────────────────────────────────────────────────────────────────────────
-BUNDLED_DATA = "africa_ports_data.csv"   # file committed alongside app.py
+BUNDLED_DATA = "africa_ports_data.csv"   # ← can be full global dataset OR Africa-only — filter is always applied
 
 @st.cache_data(show_spinner=False)
 def load_bundled(path: str) -> pd.DataFrame:
-    """Load the pre-filtered African CSV bundled in the repo."""
-    df = pd.read_csv(path, low_memory=False)
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    if "trade_balance" not in df.columns:
-        df["trade_balance"] = df["export"] - df["import"]
-    if "total_trade" not in df.columns:
-        df["total_trade"]   = df["import"] + df["export"]
-    if "region" not in df.columns:
-        REGION_MAP_LOCAL = {
-            "Algeria":"North Africa","Egypt":"North Africa","Libya":"North Africa",
-            "Morocco":"North Africa","Tunisia":"North Africa","Sudan":"North Africa",
-            "Mauritania":"North Africa","Benin":"West Africa","Burkina Faso":"West Africa",
-            "Cabo Verde":"West Africa","Côte d'Ivoire":"West Africa","The Gambia":"West Africa",
-            "Ghana":"West Africa","Guinea":"West Africa","Guinea-Bissau":"West Africa",
-            "Liberia":"West Africa","Mali":"West Africa","Niger":"West Africa",
-            "Nigeria":"West Africa","Senegal":"West Africa","Sierra Leone":"West Africa",
-            "Togo":"West Africa","Burundi":"East Africa","Comoros":"East Africa",
-            "Djibouti":"East Africa","Eritrea":"East Africa","Ethiopia":"East Africa",
-            "Kenya":"East Africa","Madagascar":"East Africa","Mauritius":"East Africa",
-            "Mayotte":"East Africa","Mozambique":"East Africa","Réunion":"East Africa",
-            "Rwanda":"East Africa","Seychelles":"East Africa","Somalia":"East Africa",
-            "South Sudan":"East Africa","Tanzania":"East Africa","Uganda":"East Africa",
-            "Cameroon":"Central Africa","Central African Republic":"Central Africa",
-            "Chad":"Central Africa","Democratic Republic of the Congo":"Central Africa",
-            "Equatorial Guinea":"Central Africa","Gabon":"Central Africa",
-            "Republic of Congo":"Central Africa","São Tomé and Príncipe":"Central Africa",
-            "Angola":"Southern Africa","Botswana":"Southern Africa","Eswatini":"Southern Africa",
-            "Lesotho":"Southern Africa","Malawi":"Southern Africa","Namibia":"Southern Africa",
-            "South Africa":"Southern Africa","Zambia":"Southern Africa","Zimbabwe":"Southern Africa",
-        }
-        df["region"] = df["country"].map(REGION_MAP_LOCAL).fillna("Other")
-    if "lat" not in df.columns:
-        df["lat"] = df["country"].map(lambda c: COUNTRY_COORDS.get(c, (0, 0))[0])
-        df["lon"] = df["country"].map(lambda c: COUNTRY_COORDS.get(c, (0, 0))[1])
-    return df
+    """Load the bundled CSV (full global OR pre-filtered) and extract African countries."""
+    with open(path, "rb") as fh:
+        file_bytes = fh.read()
+    return load_and_filter(file_bytes)
+
 
 
 # ── Resolve data source ───────────────────────────────────────────────────────
@@ -520,9 +490,9 @@ if uploaded_file is not None:
 
 elif os.path.exists(BUNDLED_DATA):
     # Use the pre-filtered CSV bundled in the repo
-    with st.spinner("⚡ Loading bundled African data..."):
+    with st.spinner("⚡ Loading & filtering African data from bundled file..."):
         df_all = load_bundled(BUNDLED_DATA)
-    data_source = f"📦 Default dataset: **{BUNDLED_DATA}**"
+    data_source = f"📦 Bundled: **{BUNDLED_DATA}**"
 
 else:
     # Nothing available → show upload prompt
