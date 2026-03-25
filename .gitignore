@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.env
+venv/
+.venv/
+
+# Data files — DO NOT commit raw global data
+Daily_Ports_Data.csv
+extrait_*.csv
+
+# africa_ports_data.csv IS committed (pre-filtered, small file < 5MB)
+# Uncomment the line below ONLY if you want to exclude it:
+# africa_ports_data.csv
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
